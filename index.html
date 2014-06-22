@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8' />
+    <meta http-equiv="X-UA-Compatible" content="chrome=1" />
+    <meta name="description" content="Projectcoursera : Project from Machine Learning Coursera Class" />
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>Projectcoursera</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/archlao/ProjectCoursera">View on GitHub</a>
+
+          <h1 id="project_title">Projectcoursera</h1>
+          <h2 id="project_tagline">Project from Machine Learning Coursera Class</h2>
+
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/archlao/ProjectCoursera/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/archlao/ProjectCoursera/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <p></p>
+
+<p></p>
+
+<p></p>
+
+<p></p>
+
+<p></p>MachineLearningTest - Random Forest Fit<p></p>
+
+code{white-space: pre;}<p></p>
+
+
+  pre:not([class]) {
+    background-color: white;
+  }
+<p></p>
+
+<p></p>
+
+
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+<div>
+
+
+<div>
+<h1>
+<a name="machinelearningtest---random-forest-fit" class="anchor" href="#machinelearningtest---random-forest-fit"><span class="octicon octicon-link"></span></a>MachineLearningTest - Random Forest Fit</h1>
+<h4>
+<a name="flavio-a-moraes" class="anchor" href="#flavio-a-moraes"><span class="octicon octicon-link"></span></a><em>Flavio A. Moraes</em>
+</h4>
+<h4>
+<a name="thursday-june-22-2014" class="anchor" href="#thursday-june-22-2014"><span class="octicon octicon-link"></span></a><em>Thursday, June 22, 2014</em>
+</h4>
+</div>
+
+<p>This is the Projec Reoprt to Pratical Machine Learning Course Project.</p>
+
+<p>Data files load codes are here:</p>
+
+<pre><code>DFTrain = read.csv("pml-training.csv")
+DFTest = read.csv("pml-testing.csv")</code></pre>
+
+<p>At first looking at data, I realized that there were variables for summary of main variables related to the actual sensors data (belt, arm, forearm, dumbbell) each of its dimensions and ID´s and of course the class variable.</p>
+
+<pre><code>DFTRsel &lt;- subset(DFTrain, !is.null(kurtosis_roll_belt),
+select=c(user_name,raw_timestamp_part_1,
+raw_timestamp_part_2,
+cvtd_timestamp,
+new_window,
+num_window,
+roll_belt,
+pitch_belt,
+yaw_belt,
+total_accel_belt,
+gyros_belt_x,
+gyros_belt_y,
+gyros_belt_z,
+accel_belt_x,
+accel_belt_y,
+accel_belt_z,
+magnet_belt_x,
+magnet_belt_y,
+magnet_belt_z,
+roll_arm,
+pitch_arm,
+yaw_arm,
+gyros_arm_x,
+gyros_arm_y,
+gyros_arm_z,
+accel_arm_x,
+accel_arm_y,
+accel_arm_z,
+magnet_arm_x,
+magnet_arm_y,
+magnet_arm_z,
+roll_dumbbell,
+pitch_dumbbell,
+yaw_dumbbell,
+gyros_dumbbell_x,
+gyros_dumbbell_y,
+gyros_dumbbell_z,
+accel_dumbbell_x,
+accel_dumbbell_y,
+accel_dumbbell_z,
+magnet_dumbbell_x,
+magnet_dumbbell_y,
+magnet_dumbbell_z,
+roll_forearm,
+pitch_forearm,
+yaw_forearm,
+gyros_forearm_x,
+gyros_forearm_y,
+gyros_forearm_z,
+accel_forearm_x,
+accel_forearm_y,
+accel_forearm_z,
+magnet_forearm_x,
+magnet_forearm_y,
+magnet_forearm_z,
+classe
+))</code></pre>
+
+<p>I decided to fit a Random Forest model, cause it is robust and accurate. It also deals with feature selection on it own algorithm.</p>
+
+<p>As it is known, RF can lead to overfitting. To avoid that, I´ve tried 3 different aproaches:</p>
+
+<ol>
+<li><p>split data set into 2 parts (50% - 50%) and perform default resamppling method (boot) Random Forest in part 1 (training) and assess part 2 to see accuracy.</p></li>
+<li><p>split data set into 2 parts (75% - 25%) and perform default Random Forest in part 1 (training) with training control set to OOB (out of bag) error and assess part 2 to see accuracy.</p></li>
+<li><p>split data set into 2 parts (75% - 25%) and perform default Random Forest in part 1 (training) with training control set to K Fold (3) cross validation and assess part 2 to see accuracy.</p></li>
+</ol>
+<pre><code>library(caret)</code></pre>
+
+<pre><code>## Loading required package: lattice
+## Loading required package: ggplot2</code></pre>
+
+<pre><code>set.seed(1245)
+# first approach
+trainIndex &lt;- createDataPartition(DFTRsel$classe, p = .50,list = FALSE)
+DFTRselP1 &lt;- DFTRsel[trainIndex,]
+DFTRselP2 &lt;- DFTRsel[-trainIndex,]
+
+# Seccond and Third approach
+TrainIndex &lt;- createDataPartition(DFTRsel$classe, p = .75,list = FALSE)
+DFTRsel_Pt1 &lt;- DFTRsel[TrainIndex,]
+DFTRsel_Pt2 &lt;- DFTRsel[-TrainIndex,]</code></pre>
+
+<p>Now Train models:</p>
+
+<pre><code># first approach
+ model1 &lt;- train(classe ~., method="rf",data=DFTRselP1)</code></pre>
+
+<pre><code>## Loading required package: randomForest
+## randomForest 4.6-7
+## Type rfNews() to see new features/changes/bug fixes.</code></pre>
+
+<pre><code># Seccond approach
+ model1OOB &lt;- train(classe ~., method="rf",data=DFTRsel_Pt1,trControl = trainControl(method = "oob"))
+
+# Third approach
+ model1KFold &lt;- train(classe ~., method="rf",data=DFTRsel_Pt1,trControl = trainControl(method = "cv",number=3))</code></pre>
+
+<p>This is the summary for models:</p>
+
+<pre><code># first approach
+model1</code></pre>
+
+<pre><code>## Random Forest 
+## 
+## 9812 samples
+##   55 predictors
+##    5 classes: 'A', 'B', 'C', 'D', 'E' 
+## 
+## No pre-processing
+## Resampling: Bootstrapped (25 reps) 
+## 
+## Summary of sample sizes: 9812, 9812, 9812, 9812, 9812, 9812, ... 
+## 
+## Resampling results across tuning parameters:
+## 
+##   mtry  Accuracy  Kappa  Accuracy SD  Kappa SD
+##   2     1         1      0.002        0.003   
+##   40    1         1      0.001        0.002   
+##   80    1         1      0.002        0.002   
+## 
+## Accuracy was used to select the optimal model using  the largest value.
+## The final value used for the model was mtry = 39.</code></pre>
+
+<pre><code># Seccond approach
+model1OOB</code></pre>
+
+<pre><code>## Random Forest 
+## 
+## 14718 samples
+##    55 predictors
+##     5 classes: 'A', 'B', 'C', 'D', 'E' 
+## 
+## No pre-processing
+## Resampling: Out of Bag Resampling 
+## 
+## Summary of sample sizes:  
+## 
+## Resampling results across tuning parameters:
+## 
+##   mtry  Accuracy  Kappa
+##   2     1         1    
+##   40    1         1    
+##   80    1         1    
+## 
+## Accuracy was used to select the optimal model using  the largest value.
+## The final value used for the model was mtry = 39.</code></pre>
+
+<pre><code># Third approach
+model1KFold</code></pre>
+
+<pre><code>## Random Forest 
+## 
+## 14718 samples
+##    55 predictors
+##     5 classes: 'A', 'B', 'C', 'D', 'E' 
+## 
+## No pre-processing
+## Resampling: Cross-Validated (3 fold) 
+## 
+## Summary of sample sizes: 9812, 9812, 9812 
+## 
+## Resampling results across tuning parameters:
+## 
+##   mtry  Accuracy  Kappa  Accuracy SD  Kappa SD
+##   2     1         1      7e-04        9e-04   
+##   40    1         1      4e-04        4e-04   
+##   80    1         1      9e-04        0.001   
+## 
+## Accuracy was used to select the optimal model using  the largest value.
+## The final value used for the model was mtry = 39.</code></pre>
+
+<p>As we see fitting is very similar to 3 approaches.</p>
+
+<p>Checking classification matrix on test data:</p>
+
+<pre><code>confusionMatrix(DFTRselP2$classe,predict(model1,DFTRselP2))</code></pre>
+
+<pre><code>## Confusion Matrix and Statistics
+## 
+##           Reference
+## Prediction    A    B    C    D    E
+##          A 2790    0    0    0    0
+##          B    2 1896    0    0    0
+##          C    0    4 1705    2    0
+##          D    0    0    0 1607    1
+##          E    0    0    0    4 1799
+## 
+## Overall Statistics
+##                                         
+##                Accuracy : 0.999         
+##                  95% CI : (0.998, 0.999)
+##     No Information Rate : 0.285         
+##     P-Value [Acc &gt; NIR] : &lt;2e-16        
+##                                         
+##                   Kappa : 0.998         
+##  Mcnemar's Test P-Value : NA            
+## 
+## Statistics by Class:
+## 
+##                      Class: A Class: B Class: C Class: D Class: E
+## Sensitivity             0.999    0.998    1.000    0.996    0.999
+## Specificity             1.000    1.000    0.999    1.000    1.000
+## Pos Pred Value          1.000    0.999    0.996    0.999    0.998
+## Neg Pred Value          1.000    0.999    1.000    0.999    1.000
+## Prevalence              0.285    0.194    0.174    0.164    0.183
+## Detection Rate          0.284    0.193    0.174    0.164    0.183
+## Detection Prevalence    0.284    0.193    0.174    0.164    0.184
+## Balanced Accuracy       1.000    0.999    1.000    0.998    0.999</code></pre>
+
+<pre><code>confusionMatrix(DFTRsel_Pt2$classe,predict(model1OOB,DFTRsel_Pt2))</code></pre>
+
+<pre><code>## Confusion Matrix and Statistics
+## 
+##           Reference
+## Prediction    A    B    C    D    E
+##          A 1395    0    0    0    0
+##          B    1  948    0    0    0
+##          C    0    0  855    0    0
+##          D    0    0    0  804    0
+##          E    0    0    0    0  901
+## 
+## Overall Statistics
+##                                     
+##                Accuracy : 1         
+##                  95% CI : (0.999, 1)
+##     No Information Rate : 0.285     
+##     P-Value [Acc &gt; NIR] : &lt;2e-16    
+##                                     
+##                   Kappa : 1         
+##  Mcnemar's Test P-Value : NA        
+## 
+## Statistics by Class:
+## 
+##                      Class: A Class: B Class: C Class: D Class: E
+## Sensitivity             0.999    1.000    1.000    1.000    1.000
+## Specificity             1.000    1.000    1.000    1.000    1.000
+## Pos Pred Value          1.000    0.999    1.000    1.000    1.000
+## Neg Pred Value          1.000    1.000    1.000    1.000    1.000
+## Prevalence              0.285    0.193    0.174    0.164    0.184
+## Detection Rate          0.284    0.193    0.174    0.164    0.184
+## Detection Prevalence    0.284    0.194    0.174    0.164    0.184
+## Balanced Accuracy       1.000    1.000    1.000    1.000    1.000</code></pre>
+
+<pre><code>confusionMatrix(DFTRsel_Pt2$classe,predict(model1KFold,DFTRsel_Pt2))</code></pre>
+
+<pre><code>## Confusion Matrix and Statistics
+## 
+##           Reference
+## Prediction    A    B    C    D    E
+##          A 1395    0    0    0    0
+##          B    0  949    0    0    0
+##          C    0    0  855    0    0
+##          D    0    0    0  804    0
+##          E    0    0    0    0  901
+## 
+## Overall Statistics
+##                                     
+##                Accuracy : 1         
+##                  95% CI : (0.999, 1)
+##     No Information Rate : 0.284     
+##     P-Value [Acc &gt; NIR] : &lt;2e-16    
+##                                     
+##                   Kappa : 1         
+##  Mcnemar's Test P-Value : NA        
+## 
+## Statistics by Class:
+## 
+##                      Class: A Class: B Class: C Class: D Class: E
+## Sensitivity             1.000    1.000    1.000    1.000    1.000
+## Specificity             1.000    1.000    1.000    1.000    1.000
+## Pos Pred Value          1.000    1.000    1.000    1.000    1.000
+## Neg Pred Value          1.000    1.000    1.000    1.000    1.000
+## Prevalence              0.284    0.194    0.174    0.164    0.184
+## Detection Rate          0.284    0.194    0.174    0.164    0.184
+## Detection Prevalence    0.284    0.194    0.174    0.164    0.184
+## Balanced Accuracy       1.000    1.000    1.000    1.000    1.000</code></pre>
+
+<p>As we can see all approaches are very similar with the test data. By that I concluded that this model is very accurate. () so the out sample error is estimate as less than 1% (based on accuracy in test data)</p>
+
+<p>So I choose modelOOB to predict in DFTest (20 submission obs);</p>
+
+<pre><code>Resp&lt;- predict(model1OOB,DFTest)
+Resp</code></pre>
+
+<pre><code>##  [1] B A B A A E D B A A B C B A E E A B B B
+## Levels: A B C D E</code></pre>
+
+<p>The final Result was 100% correct classification on test data.</p>
+
+<p></p>
+</div>
+
+<p>
+</p>
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">Projectcoursera maintained by <a href="https://github.com/archlao">archlao</a></p>
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+    
+
+  </body>
+</html>

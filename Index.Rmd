@@ -1,0 +1,168 @@
+---
+title: "MachineLearningTest - Random Forest Fit"
+author: "Flavio A. Moraes"
+date: "Thursday, June 22, 2014"
+
+---
+
+This is the Projec Reoprt to Pratical Machine Learning Course Project.
+
+Data files load codes are here:
+
+```{r}
+DFTrain = read.csv("pml-training.csv")
+DFTest = read.csv("pml-testing.csv")
+
+```
+
+At first looking at data, I realized that there were variables for summary of main variables related to the actual sensors data (belt, arm, forearm, dumbbell) each of its dimensions and ID´s and of course the class variable.
+
+
+```{r}
+
+DFTRsel <- subset(DFTrain, !is.null(kurtosis_roll_belt),
+select=c(user_name,raw_timestamp_part_1,
+raw_timestamp_part_2,
+cvtd_timestamp,
+new_window,
+num_window,
+roll_belt,
+pitch_belt,
+yaw_belt,
+total_accel_belt,
+gyros_belt_x,
+gyros_belt_y,
+gyros_belt_z,
+accel_belt_x,
+accel_belt_y,
+accel_belt_z,
+magnet_belt_x,
+magnet_belt_y,
+magnet_belt_z,
+roll_arm,
+pitch_arm,
+yaw_arm,
+gyros_arm_x,
+gyros_arm_y,
+gyros_arm_z,
+accel_arm_x,
+accel_arm_y,
+accel_arm_z,
+magnet_arm_x,
+magnet_arm_y,
+magnet_arm_z,
+roll_dumbbell,
+pitch_dumbbell,
+yaw_dumbbell,
+gyros_dumbbell_x,
+gyros_dumbbell_y,
+gyros_dumbbell_z,
+accel_dumbbell_x,
+accel_dumbbell_y,
+accel_dumbbell_z,
+magnet_dumbbell_x,
+magnet_dumbbell_y,
+magnet_dumbbell_z,
+roll_forearm,
+pitch_forearm,
+yaw_forearm,
+gyros_forearm_x,
+gyros_forearm_y,
+gyros_forearm_z,
+accel_forearm_x,
+accel_forearm_y,
+accel_forearm_z,
+magnet_forearm_x,
+magnet_forearm_y,
+magnet_forearm_z,
+classe
+))
+
+```
+
+
+I decided to fit a Random Forest model, cause it is robust and accurate. It also deals with feature selection on it own algorithm.
+
+As it is known, RF can lead to overfitting. 
+To avoid that, I´ve tried 3 different aproaches:
+
+1) split data set into 2 parts (50% - 50%) and perform default resamppling method (boot) Random Forest in part 1 (training) and assess part 2 to see accuracy. 
+
+2) split data set into 2 parts (75% - 25%) and perform default Random Forest in part 1 (training) with training control set to OOB (out of bag) error and assess part 2 to see accuracy. 
+
+3) split data set into 2 parts (75% - 25%) and perform default Random Forest in part 1 (training) with training control set to K Fold (3) cross validation and assess part 2 to see accuracy. 
+
+
+```{r}
+library(caret)
+
+set.seed(1245)
+# first approach
+trainIndex <- createDataPartition(DFTRsel$classe, p = .50,list = FALSE)
+DFTRselP1 <- DFTRsel[trainIndex,]
+DFTRselP2 <- DFTRsel[-trainIndex,]
+
+# Seccond and Third approach
+TrainIndex <- createDataPartition(DFTRsel$classe, p = .75,list = FALSE)
+DFTRsel_Pt1 <- DFTRsel[TrainIndex,]
+DFTRsel_Pt2 <- DFTRsel[-TrainIndex,]
+
+```
+
+Now Train models:
+
+```{r}
+# first approach
+ model1 <- train(classe ~., method="rf",data=DFTRselP1)
+# Seccond approach
+ model1OOB <- train(classe ~., method="rf",data=DFTRsel_Pt1,trControl = trainControl(method = "oob"))
+
+# Third approach
+ model1KFold <- train(classe ~., method="rf",data=DFTRsel_Pt1,trControl = trainControl(method = "cv",number=3))
+
+```
+
+
+This is the summary for models:
+
+```{r}
+# first approach
+model1
+
+# Seccond approach
+model1OOB
+
+# Third approach
+model1KFold
+```
+
+
+As we see fitting is very similar to 3 approaches.
+
+Checking classification matrix on test data:
+
+```{r}
+
+confusionMatrix(DFTRselP2$classe,predict(model1,DFTRselP2))
+
+confusionMatrix(DFTRsel_Pt2$classe,predict(model1OOB,DFTRsel_Pt2))
+
+confusionMatrix(DFTRsel_Pt2$classe,predict(model1KFold,DFTRsel_Pt2))
+```
+
+
+As we can see all approaches are very similar with the test data. By that I concluded that this model is very accurate. () 
+so the out sample error is estimate as less than 1% (based on accuracy in test data)
+
+So I choose modelOOB to predict in DFTest (20 submission obs);
+
+
+```{r}
+Resp<- predict(model1OOB,DFTest)
+Resp
+
+```
+
+The final Result was 100% correct classification on test data.
+
+
